@@ -120,7 +120,7 @@ firebase.auth().onAuthStateChanged(function(user) {
 				trRef.on('child_added', function(snapshot) {
 					var tenantID = snapshot.key;
 					trRef1=trRef.child(snapshot.key);
-					trRef1.once('value', function(snapshot) {
+					trRef1.once('child_added', function(snapshot) {
 						//get starting date , building address , status occupy , ref id
 						var statingDate=snapshot.child("start_date").val();
 						var propAddr=snapshot.child("prop_addr").val();

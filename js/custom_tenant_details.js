@@ -805,8 +805,8 @@ function extendTenant() {
 	//collect data from form
 	historyperiod++;
 	var payPlan = $("#extendPayPlan").val();
-	var bondPrice = $("#fbond").html().slice(4,-2);
-	var rentPrice = $("#fprice").html().slice(4,-2);
+	var bondPrice = $("#fbond").html();
+	var rentPrice = $("#fprice").html();
 	var startDate = $("#startDate").html();
 	var endDate = $("#endDate").html();
 	//write to page
@@ -839,6 +839,10 @@ function extendTenant() {
 			</div>
 		</div>`;
 	$("#tenanthistory").append(theText);
+	//update data date (dummy)
+	$("#startDate").html(endDate);
+	$("#endDate").html('');
+	$("#extendForm").trigger("reset");
 	//create due on ledger
 	/*
 	var bondPriceInt = parseInt($("#cfbond").val());
@@ -980,13 +984,48 @@ $(document).ready(function() {
 	
 	// mengambil data yang approved atau occupy dari firebase ke dalam list
 	var trRef1 = firebase.database().ref().child("tenant-room/"+id);
-	trRef1.on('value', function(snapshot) {
+	trRef1.on('child_added', function(snapshot) {
 		//get starting date , building address , status occupy , ref id
 		var statingDate=snapshot.child("start_date").val();
 		var propAddr=snapshot.child("prop_addr").val();
 		var statOccupy=snapshot.child("stat_occupy").val();
 		var refN=snapshot.child("ref_number").val().split(" ");
 		var refNumber=refN[0]+refN[1]+refN[2];
+		
+		//mengambil rent price
+		var rentPrice=snapshot.child("rent_price").val();
+		$("#yearp").val(rentPrice);
+		$("#payment").html(get_fmoney(rentPrice)+" paid monthly Electricity include /month");
+		//mengambil rent price
+		var sDate=snapshot.child("start_date").val();
+		
+		//mengambil bond price
+		var bondPrice=snapshot.child("rent_bond").val();
+		$("#bond").html(get_fmoney(bondPrice)+" paid monthly Electricity include /month");
+		
+		//mengambil ctrt_opt
+		var kontrak=snapshot.child("ctrt_opt").val();
+		
+		// mengisi data pertama dari kontrak
+		var intend = parseInt(kontrak);
+		
+		var startDate = sDate.split("/");
+		var startMonth = startDate[0];
+		var startDay = startDate[1];
+		var startYear = startDate[2];
+		var endMonth = parseInt(startMonth)+intend;
+		var endDay = parseInt(startDay);
+		var endYear = parseInt(startYear);
+		if (endMonth>12) {
+			var addYear = Math.trunc(endMonth/12);
+			endYear += addYear;
+			endMonth = endMonth%12;
+		}
+		var endDate = endMonth+"/"+endDay+"/"+endYear;
+		$("#period").html(reformatDate(sDate)+"-"+reformatDate(endDate));
+		// update next date (dummy)
+		$("#startDate").html(reformatDate(endDate));
+		
 		// mengambil data tenant yang status nya approved atau active
 		if ((statOccupy=="approved") ||(statOccupy=="active")){
 			var tenantRef = firebase.database().ref().child("tenant/"+id);
@@ -1040,7 +1079,6 @@ $(document).ready(function() {
 				var contactR2=snapshot.child("contact").val();
 				var full_nameR2=snapshot.child("full_name").val();
 				var relationR2=snapshot.child("relation").val();
-				
 				
 				// check data pada list tenantname
 				for (i=0;i<(tenantNames.length);++i){

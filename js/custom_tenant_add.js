@@ -26,6 +26,24 @@ function rem_fmoney(money) {
 	
 }
 
+function rem_moneydot(money) {
+	
+	return parseInt(money.split(".").join(""));
+	
+}
+
+function get_moneydot(money) {
+	
+	if (isNaN(parseInt(money))) {
+		var convertmoney = "";
+	} else {
+		money = rem_moneydot(money);
+		var convertmoney = money.toString().replace(/(\d)(?=(\d\d\d)+(?!\d))/g, "$1.");
+	}
+	return convertmoney;
+	
+}
+
 function pembulatan(input) {
 	
 	return (Math.round((parseInt(input)/100)))*100;
@@ -76,6 +94,20 @@ function reformatDate2(inputDate) {
 	}
 	outputYear = "20"+inputYear;
 	return (outputMonth+"/"+outputDay+"/"+outputYear);
+	
+}
+
+function reformatDate3(inputDate) {
+	
+	months=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+	inputBroke=inputDate.split("/");
+	inputDay=parseInt(inputBroke[0]);
+	inputMonth=parseInt(inputBroke[1]);
+	inputYear=inputBroke[2];
+	outputDay=inputDay;
+	outputMonth=months[inputMonth-1];
+	outputYear=inputYear;
+	return (outputDay+"-"+outputMonth+"-"+outputYear);
 	
 }
 
@@ -880,49 +912,6 @@ $(document).ready(function() {
 			}
 		}
 	})
-	//price adjustment listener
-	$("#padj").on('click', function() {
-		//prompt to insert value
-		var prompter = prompt("Adjustment");
-		//when prompt is ok
-		if (prompter != null && prompter != "") {
-			var adjprice = parseInt($("#cprice").val()) + parseInt(prompter);
-			$("#fprice").html(get_fmoney(pembulatan(adjprice)));
-			$("#cfprice").val(pembulatan(adjprice));
-			$("#payadjt").val(prompter);
-			if ($("#payplan").find("option:selected").attr("value") == "annually") {
-				var yearPr = $("#cfprice").val();
-				var yearBo = pembulatan((parseInt(yearPr)/12).toFixed(2));
-				$("#fbond").html(get_fmoney(yearBo));
-				$("#cfbond").val(yearBo);
-			} else if ($("#payplan").find("option:selected").attr("value") == "semiannually") {
-				var sixPr = $("#cfprice").val();
-				var yearPr = pembulatan((((sixPr-25000)/1.1)*2).toFixed(2));
-				var monthPr = pembulatan((((parseInt(yearPr)/12)*1.2)+25000).toFixed(2));
-				var sixBo = pembulatan(monthPr);
-				$("#fbond").html(get_fmoney(sixBo));
-				$("#cfbond").val(sixBo);
-			} else if ($("#payplan").find("option:selected").attr("value") == "monthly") {
-				var monthPr = $("#cfprice").val();
-				var yearPr = pembulatan((((monthPr-25000)/1.2)*12).toFixed(2));
-				var sixPr = pembulatan((((parseInt(yearPr)/2)*1.1)+25000).toFixed(2));
-				var monthBo = pembulatan((sixPr/6).toFixed(2));
-				$("#fbond").html(get_fmoney(monthBo));
-				$("#cfbond").val(monthBo);
-			}
-		}
-	})
-	//bond money adjustment listener
-	$("#badj").on('click', function() {
-		//prompt to insert value
-		var prompter = prompt("Adjustment");
-		//when prompt is ok
-		if (prompter != null && prompter != "") {
-			var adjbond = parseInt($("#cfbond").val()) + parseInt(prompter);
-			$("#fbond").html(get_fmoney(pembulatan(adjbond)));
-			$("#bondadjt").val(prompter);
-		}
-	})
 	//occupation listener
 	$("#occupy").on('change', function() {
 		if ($(this).find("option:selected").attr("value") == "pelajar-mahasiswa") {
@@ -1013,16 +1002,76 @@ $(document).ready(function() {
 	$("#confirmYes").on('click', function () {
 		uploadDB();
 	})
+	//birth date picker listener
+	$("#bdate").on('change', function () {
+		if ($(this).val() != "") {
+			$(this).val(reformatDate3($(this).val()));
+		}
+	})
+	//price adjustment listener
+	$("#padj").on('click', function() {
+		$("#modalPriceAdjt").modal();
+	});
+	//bond money adjustment listener
+	$("#badj").on('click', function() {
+		$("#modalBondAdjt").modal();
+	});
+	//price adjustment auto dot
+	$("#priceAdjustment").on('keyup change', function() {
+		$("#priceAdjustment").val(get_moneydot($("#priceAdjustment").val()));
+	});
+	//bond adjustment auto dot
+	$("#bondAdjustment").on('keyup change', function() {
+		$("#bondAdjustment").val(get_moneydot($("#bondAdjustment").val()));
+	});
+	//confirm price adjustment listener
+	$("#confirmPriceAdjt").on('click', function() {
+		var prompter = rem_moneydot($("#priceAdjustment").val());
+		if (prompter != null && prompter != "") {
+			var adjprice = parseInt(prompter);
+			$("#fprice").html(get_fmoney(pembulatan(adjprice)));
+			$("#cfprice").val(pembulatan(adjprice));
+			$("#payadjt").val(prompter);
+			if ($("#payplan").find("option:selected").attr("value") == "annually") {
+				var yearPr = $("#cfprice").val();
+				var yearBo = pembulatan((parseInt(yearPr)/12).toFixed(2));
+				$("#fbond").html(get_fmoney(yearBo));
+				$("#cfbond").val(yearBo);
+			} else if ($("#payplan").find("option:selected").attr("value") == "semiannually") {
+				var sixPr = $("#cfprice").val();
+				var yearPr = pembulatan((((sixPr-25000)/1.1)*2).toFixed(2));
+				var monthPr = pembulatan((((parseInt(yearPr)/12)*1.2)+25000).toFixed(2));
+				var sixBo = pembulatan(monthPr);
+				$("#fbond").html(get_fmoney(sixBo));
+				$("#cfbond").val(sixBo);
+			} else if ($("#payplan").find("option:selected").attr("value") == "monthly") {
+				var monthPr = $("#cfprice").val();
+				var yearPr = pembulatan((((monthPr-25000)/1.2)*12).toFixed(2));
+				var sixPr = pembulatan((((parseInt(yearPr)/2)*1.1)+25000).toFixed(2));
+				var monthBo = pembulatan((sixPr/6).toFixed(2));
+				$("#fbond").html(get_fmoney(monthBo));
+				$("#cfbond").val(monthBo);
+			}
+		}
+	});
+	//confirm bond adjustment listener
+	$("#confirmBondAdjt").on('click', function() {
+		var prompter = rem_moneydot($("#bondAdjustment").val());
+		if (prompter != null && prompter != "") {
+			var adjbond = parseInt(prompter);
+			$("#fbond").html(get_fmoney(pembulatan(adjbond)));
+			$("#bondadjt").val(prompter);
+		}
+	});
 	//special case button listener
 	$("#specialcase").on('click', function () {
-		var id = window.location.href.split('=');
+		/* var id = window.location.href.split('=');
 		if (id[1] == undefined) {
 			window.location = "tenant_add_special.html";
 		} else {
 			window.location = "tenant_add_special.html?id="+id[1];
-		}
+		} */
 	})
-	
 })
 
 //jquery form validation
