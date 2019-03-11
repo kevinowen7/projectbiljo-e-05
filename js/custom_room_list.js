@@ -607,14 +607,10 @@ $(document).ready(function() {
 					})
 				} else {
 					//cek
-					if (buildList[0].buildid == String(buildno)){
-						$("#propaddr_s").val(buildList[0].address1);
-					}
-					if (buildList[1].buildid == String(buildno)){
-						$("#propaddr_s").val(buildList[1].address1);
-					}
-					if (buildList[2].buildid == String(buildno)){
-						$("#propaddr_s").val(buildList[2].address1);
+					for(i=0;i<buildList.length;i++){
+						if (buildList[i].buildid == String(buildno)){
+							$("#propaddr_s").val(buildList[i].address1);
+						}
 					}
 					//fill total floor and total room
 					$("#totalR").html(snapshot.child("total_room").val())
@@ -945,10 +941,9 @@ $(document).ready(function() {
 				}
 			}
 			var floorno = data[0];
-			var roomno = data[1];
-			var id = "1"+buildno+floorno+roomno;
+			var roomID = data[1].split("id='")[1].split("'")[0];
 			var roundPrice = (Math.round((parseInt(prompter)/100)))*100;
-			var dbRef = firebase.database().ref().child("property/residential/building_no:"+buildno+"/floor:"+floorno+"/ID:"+id);
+			var dbRef = firebase.database().ref().child("property/residential/building_no:"+buildno+"/floor:"+floorno+"/ID:"+roomID);
 			//update price to database
 			dbRef.update({
 				yearprice : roundPrice

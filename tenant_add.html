@@ -18,8 +18,6 @@
 		<!-- Bootstrap Date-Time Picker CSS -->
 		<link href="css/bootstrap-datetimepicker.min.css" rel="stylesheet">
 		<link href="css/bootstrap-datepicker3.min.css" rel="stylesheet">
-		<!-- jQuery Date Select -->
-		<link href="css/jquery.dateselect.css" rel="stylesheet">
 		<!-- jQuery UI -->
 		<link href="css/jquery-ui.css" rel="stylesheet">
 		<!-- jQuery gritter -->
@@ -321,7 +319,7 @@
 										<label for="bdate" class="control-label col-lg-2">Birth date</label>
 										<div class="col-lg-3">
 											<div id="bdatepicker" class="input-group date">
-												<input id="bdate" name="bdate" type="text" class="form-control" placeholder="Select Date" readonly required>
+												<input id="bdate" name="bdate" type="text" class="form-control" placeholder="Pick Date" readonly required>
 												<span class="input-group-addon add-on btn btn-default" style="cursor: pointer;"><i class="fa fa-calendar"></i></span>
 											</div>
 										</div>
@@ -535,9 +533,9 @@
 		<div id="modalConfirm" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true">
 			<div class="modal-dialog">
 				<div class="modal-content">
-					<div class="modal-header" style="background-color:#ED4747">
+					<div class="modal-header">
 						<button type="button" class="close" data-dismiss="modal" aria-hidden="true">x	</button>
-						<h4 class="modal-title" style="color:#FFF"><b>Confirmation Dialog</b></h4>
+						<h4 class="modal-title">Confirmation Dialog</h4>
 					</div>
 					<div class="modal-body">
 						<p>Are you sure you want to book this room?</p>
@@ -545,54 +543,6 @@
 					<div class="modal-footer">
 						<button type="button" class="btn btn-default btn-sm" data-dismiss="modal" aria-hidden="true">Cancel</button>
 						<button id="confirmYes" type="button" class="btn btn-danger btn-sm" data-dismiss="modal" aria-hidden="true">Save</button>
-					</div>
-				</div>
-			</div>
-		</div>
-		<div id="modalPriceAdjt" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true">
-			<div class="modal-dialog">
-				<div class="modal-content">
-					<div class="modal-header" style="background-color:#528FE2">
-						<button type="button" class="close" data-dismiss="modal" aria-hidden="true">x	</button>
-						<h4 class="modal-title" style="color:#FFF"><b>Adjustment</b></h4>
-					</div>
-					<div class="modal-body">
-						<form id="adjustmentPriceForm" class="form-horizontal" role="form" method="post" action="" autocomplete="off">
-							<div class="form-group">
-								<label for="priceAdjustment" class="control-label col-lg-3">Price Adjustment</label>
-								<div class="col-lg-5">
-									<input id="priceAdjustment" name="priceAdjustment" class="form-control" type="text" required/>
-								</div>
-							</div>
-						</form>
-					</div>
-					<div class="modal-footer">
-						<button type="button" class="btn btn-default btn-sm" data-dismiss="modal" aria-hidden="true">Cancel</button>
-						<button id="confirmPriceAdjt" type="button" class="btn btn-primary btn-sm" data-dismiss="modal" aria-hidden="true">Adjust</button>
-					</div>
-				</div>
-			</div>
-		</div>
-		<div id="modalBondAdjt" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true">
-			<div class="modal-dialog">
-				<div class="modal-content">
-					<div class="modal-header" style="background-color:#528FE2">
-						<button type="button" class="close" data-dismiss="modal" aria-hidden="true">x	</button>
-						<h4 class="modal-title" style="color:#FFF"><b>Adjustment</b></h4>
-					</div>
-					<div class="modal-body">
-						<form id="adjustmentBondForm" class="form-horizontal" role="form" method="post" action="" autocomplete="off">
-							<div class="form-group">
-								<label for="bondAdjustment" class="control-label col-lg-4">Bond Money Adjustment</label>
-								<div class="col-lg-5">
-									<input id="bondAdjustment" name="bondAdjustment" class="form-control" type="text" required/>
-								</div>
-							</div>
-						</form>
-					</div>
-					<div class="modal-footer">
-						<button type="button" class="btn btn-default btn-sm" data-dismiss="modal" aria-hidden="true">Cancel</button>
-						<button id="confirmBondAdjt" type="button" class="btn btn-primary btn-sm" data-dismiss="modal" aria-hidden="true">Adjust</button>
 					</div>
 				</div>
 			</div>
@@ -613,10 +563,6 @@
 		<script src="js/wysihtml5-0.3.0.js"></script>
 		<script src="js/prettify.js"></script>
 		<script src="js/bootstrap-wysihtml5.min.js"></script>
-		<!-- jQuery Mouse Wheel -->
-		<script src="js/jquery.mousewheel.min.js"></script>
-		<!-- jQuery Date Select -->
-		<script src="js/jquery.dateselect.min.js"></script>
 		<!-- jQuery gritter -->
 		<script src="js/jquery.gritter.min.js"></script>
 		<!-- Validate JS -->
@@ -646,20 +592,13 @@
         <script src="js/custom_tenant_add.js"></script>
 		<!-- Javascript for this page -->
 		<script>
-		/*$('#bdatepicker').datepicker({
+		$('#bdatepicker').datepicker({
 			format: "d-M-yy",
 			autoclose: true
-		});*/
-		$('#bdatepicker').on('click', function(e) {
-			e.preventDefault();
-			$.dateSelect.show({
-				element: 'input[name="bdate"]'
-			});
 		});
 		$('#edatepicker').datepicker({
 			format: "d-M-yy",
-			autoclose: true,
-			startDate: '-180d'
+			autoclose: true
 		});
 		</script>
 
