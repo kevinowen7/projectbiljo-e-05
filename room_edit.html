@@ -17,6 +17,7 @@
 		<link href="css/bootstrap.min.css" rel="stylesheet">
 		<!-- Bootstrap Date-Time Picker CSS -->
 		<link href="css/bootstrap-datetimepicker.min.css" rel="stylesheet">
+		<link href="css/bootstrap-datepicker3.min.css" rel="stylesheet">
 		<!-- jQuery UI -->
 		<link href="css/jquery-ui.css" rel="stylesheet">
 		<!-- jQuery gritter -->
@@ -169,8 +170,7 @@
 										<label class="control-label col-lg-2">Annually</label>
 										<div class="col-lg-2">
 											<div class="checkbox">
-												<span id="pyear" name="pyear"></span>
-												<input id="pyearval" name="pyearval" type="hidden" value="" />
+												<input id="pyear" name="pyear" class="form-control" type="text" required/>
 											</div>
 										</div>
 										<div class="col-lg-2">
@@ -213,11 +213,9 @@
 										</div>
 										<label for="adate" class="control-label col-lg-2">Available Date</label>
 										<div class="col-lg-2">
-											<div id="datetimepicker1" class="input-append input-group dtpicker">
-												<input id="adate" name="adate" data-format="MM/dd/yyyy" type="text" class="form-control" readonly />
-												<span id="datebutton" class="input-group-addon add-on" style="cursor:pointer;">
-													<i data-time-icon="fa fa-times" data-date-icon="fa fa-calendar"></i>
-												</span>
+											<div id="adatepicker" class="input-group date">
+												<input id="adate" name="adate" type="text" class="form-control" placeholder="Pick Date" readonly required>
+												<span class="input-group-addon add-on btn btn-default" style="cursor: pointer;"><i class="fa fa-calendar"></i></span>
 											</div>
 										</div>
 									</div>
@@ -402,7 +400,8 @@
 		<!-- jQuery UI -->
 		<script src="js/jquery-ui.min.js"></script>
 		<!-- Date Time Picker JS -->
-		<script src="js/bootstrap-datetimepicker.min.js"></script>	
+		<script src="js/bootstrap-datetimepicker.min.js"></script>
+		<script src="js/bootstrap-datepicker.min.js"></script>
 		<!-- Bootstrap wysihtml5 JS -->		
 		<script src="js/wysihtml5-0.3.0.js"></script>
 		<script src="js/prettify.js"></script>
@@ -435,6 +434,12 @@
         <script src="js/custom_logincheck.js"></script>
         <script src="js/custom_room_edit.js"></script>
 		<!-- Javascript for this page -->
+		<script>
+		$('#adatepicker').datepicker({
+			format: "d-M-yy",
+			autoclose: true
+		});
+		</script>
 
 	</body>	
 </html>

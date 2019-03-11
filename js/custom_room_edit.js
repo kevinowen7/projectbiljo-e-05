@@ -68,9 +68,65 @@ function get_fmoney(money) {
 	
 }
 
+function rem_moneydot(money) {
+	
+	return parseInt(money.split(".").join(""));
+	
+}
+
+function get_moneydot(money) {
+	
+	if (isNaN(parseInt(money))) {
+		var convertmoney = "";
+	} else {
+		money = rem_moneydot(money);
+		var convertmoney = money.toString().replace(/(\d)(?=(\d\d\d)+(?!\d))/g, "$1.");
+	}
+	return convertmoney;
+	
+}
+
 function pembulatan(input) {
 	
 	return (Math.round((parseInt(input)/100)))*100;
+	
+}
+
+function reformatDate(inputDate) {
+	
+	months=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+	inputBroke=inputDate.split("/");
+	inputDay=parseInt(inputBroke[1]);
+	inputMonth=parseInt(inputBroke[0]);
+	inputYear=inputBroke[2];
+	outputDay=inputDay;
+	outputMonth=months[inputMonth-1];
+	outputYear=inputYear.split("")[2]+inputYear.split("")[3];
+	return (outputDay+"-"+outputMonth+"-"+outputYear);
+	
+}
+
+function reformatDate2(inputDate) {
+	
+	months=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+	months2=["01","02","03","04","05","06","07","08","09","10","11","12"];
+	inputBroke=inputDate.split("-");
+	inputDay=inputBroke[0];
+	inputMonth=inputBroke[1];
+	inputYear=inputBroke[2];
+	if (parseInt(inputDay) < 10) {
+		outputDay = "0"+inputDay;
+	} else {
+		outputDay = inputDay;
+	}
+	for (var i=0;i<months.length;i++) {
+		if (inputMonth == months[i]) {
+			outputMonth = months2[i];
+			break
+		}
+	}
+	outputYear = "20"+inputYear;
+	return (outputMonth+"/"+outputDay+"/"+outputYear);
 	
 }
 
@@ -129,7 +185,40 @@ function uploadDB() {
 	for(i=1; i<=pMax; i++) {
 		$("#progBar"+i).css("width","100%");
 	}
-	setTimeout(function(){
+	var roomID = $("#roomid").html();
+	var IDBroke = roomID.split("");
+	var buildType;
+	if (IDBroke[0] == "1") {
+		buildType = "residential";
+	} else {
+		buildType = "commercial";
+	}
+	var buildNo = IDBroke[1]+IDBroke[2];
+	var floorNo = IDBroke[3]+IDBroke[4];
+	var d = new Date();
+	const dbRefRoom = firebase.database().ref("property/"+buildType+"/building_no:"+buildNo+"/floor:"+floorNo+"/ID:"+roomID);
+	dbRefRoom.update({
+		availdate : reformatDate2($("#adate").val()),
+		last_edited : (parseInt(d.getMonth())+1)+"/"+d.getDate()+"/"+d.getFullYear(),
+		roomsize : $("#rmsize").val(),
+		yearprice : rem_moneydot($("#pyear").val()),
+		facilities: {
+			bed : $("#bed").prop("checked"),
+			wardrb : $("#wardrb").prop("checked"),
+			table : $("#table").prop("checked"),
+			bthins : $("#bthins").prop("checked"),
+			wifi : $("#wifi").prop("checked"),
+			ctv : $("#ctv").prop("checked"),
+			hwater : $("#hwater").prop("checked"),
+			parker : $("#parker").prop("checked"),
+			laundy : $("#laundy").prop("checked"),
+			pwrtkn : $("#pwrtkn").prop("checked"),
+			ac : $("#ac").prop("checked"),
+			bedcvr : $("#bedcvr").prop("checked"),
+			secury : $("#secury").prop("checked"),
+			kitchn : $("#kitchn").prop("checked")
+		}
+	}).then(function onSuccess(res) {
 		//success notification
 		$.gritter.add({
 			title: 'Room Updated',
@@ -148,7 +237,26 @@ function uploadDB() {
 		$("#loadingUpload").fadeOut(250, function() {
 			$(this).hide();
 		})
-	}, 2000);
+	}).catch(function onError(err) {
+		//error notification
+		$.gritter.add({
+			title: 'Error Ref Room',
+			text: err.code+" : "+err.message,
+			image: './img/bell.png',
+			sticky: false,
+			time: 3500,
+			class_name: 'gritter-custom'
+		});
+		unlockForm();
+		//scroll back to top
+		$('html, body').animate({
+			scrollTop: 0
+		}, 500);
+		//stop loading icon
+		$("#cover-spin").fadeOut(250, function() {
+			$(this).hide();
+		});
+	});
 	
 }
 
@@ -187,11 +295,10 @@ $(document).ready(function() {
 			$("#secury").prop("checked",snapshot.child("facilities/secury").val());
 			$("#kitchn").prop("checked",snapshot.child("facilities/kitchn").val());
 			//set other input fields in form
-			$("#pyear").html(get_fmoney(snapshot.child("yearprice").val()))
-			$("#pyearval").val(snapshot.child("yearprice").val());
+			$("#pyear").val(get_moneydot(snapshot.child("yearprice").val().toString()))
 			$("#pyear").trigger("change");
 			$("#rmsize").val(snapshot.child("roomsize").val());
-			$("#adate").val(snapshot.child("availdate").val());
+			$("#adate").val(reformatDate(snapshot.child("availdate").val()));
 			//check value of photos
 			var photo1 = snapshot.child("photos/photo1").val();
 			if (photo1 != "empty") {
@@ -317,8 +424,9 @@ $(document).ready(function() {
 		}
 	})
 	//price listener
-	$('#pyear').on('change', function () {
-		var yearPr = $("#pyearval").val();
+	$('#pyear').on('keyup change', function () {
+		$(this).val(get_moneydot($(this).val()));
+		var yearPr = rem_moneydot($(this).val());
 		if (yearPr == ""){
 			$("#byear").html("");
 			$("#psix").html("");
@@ -337,17 +445,7 @@ $(document).ready(function() {
 			$("#pmonth").html(get_fmoney(monthPr));
 			$("#bmonth").html(get_fmoney(monthBo));
 		}
-	})
-	$('#pyear').on('dblclick', function () {
-		//prompt to insert value
-		var prompter = prompt("Change value (Rp.)", $("#pyearval").val());
-		//when prompt is ok
-		if (prompter != null) {
-			$("#pyearval").val(pembulatan(parseInt(prompter)));
-			$("#pyear").html(get_fmoney($("#pyearval").val()));
-			$("#pyear").trigger("change");
-		}
-	})
+	});
 	//modal confirmation listener
 	$("#confirmYes").on('click', function () {
 		uploadDB();
