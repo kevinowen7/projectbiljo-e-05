@@ -100,17 +100,6 @@ $('.ui-tooltip').tooltip();
 /* Date Time Picker JS */
 /* ****************** */
 
-$(function() {
-	$('#datetimepicker1').datetimepicker({
-		pickTime: false
-	});
-});
-$(function() {
-	$('#datetimepicker2').datetimepicker({
-		pickDate: false
-	});
-});
-
 /* ****************************** */
 /* Slider */
 /* ******************************* */
