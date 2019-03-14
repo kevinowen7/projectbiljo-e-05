@@ -111,6 +111,13 @@ function reformatDate3(inputDate) {
 	
 }
 
+function date_diff_indays(d1, d2) {
+	
+	var diff = Date.parse(d2) - Date.parse(d1);
+	return Math.floor(diff / 86400000);
+	
+}
+
 function getFileExtension(filename) {
 	
 	//get file extension such as .jpg .png .bmp etc
@@ -628,6 +635,8 @@ $(document).ready(function() {
 					}
 				})
 				$("#roomnumb").on('change', function () {
+					$("#edatepicker").datepicker("destroy");
+					$("#edate").val("");
 					if ($(this).find("option:selected").attr('value') == "") {
 						$("#payplan").prop("disabled",true);
 						$("#payplan").val("");
@@ -673,6 +682,13 @@ $(document).ready(function() {
 								$("#adate").html(reformatDate(snapshot.child("availdate").val()));
 								$("#yearp").val(parseInt(snapshot.child("yearprice").val()));
 								$("#myRoomID").val(roomID);
+								var dd = new Date();
+								var dateDiff = date_diff_indays((parseInt(dd.getMonth())+1)+"/"+dd.getDate()+"/"+dd.getFullYear(),reformatDate2($("#adate").html()))+1;
+								$('#edatepicker').datepicker({
+									format: "d-M-yy",
+									autoclose: true,
+									startDate: dateDiff+'d'
+								});
 								//stop loading icon
 								$("#cover-spin").fadeOut(250, function() {
 									$(this).hide();
@@ -748,6 +764,13 @@ $(document).ready(function() {
 							$("#adate").html(reformatDate(snapshot.child("availdate").val()));
 							$("#yearp").val(snapshot.child("yearprice").val());
 							$("#myRoomID").val(id[1]);
+							var dd = new Date();
+							var dateDiff = date_diff_indays((parseInt(dd.getMonth())+1)+"/"+dd.getDate()+"/"+dd.getFullYear(),reformatDate2($("#adate").html()))+1;
+							$('#edatepicker').datepicker({
+								format: "d-M-yy",
+								autoclose: true,
+								startDate: dateDiff+'d'
+							});
 							//stop loading icon
 							$("#cover-spin").fadeOut(250, function() {
 								$(this).hide();
@@ -1002,6 +1025,14 @@ $(document).ready(function() {
 	$("#confirmYes").on('click', function () {
 		uploadDB();
 	})
+	//entry date picker listener
+	$("#edate").on('change', function () {
+		if ($(this).val() != "") {
+			if(date_diff_indays(reformatDate2($(this).val()),reformatDate2($("#adate").html())) > 0) {
+				alert("Date not allowed");
+			}
+		}
+	})
 	//birth date picker listener
 	$("#bdate").on('change', function () {
 		if ($(this).val() != "") {
@@ -1072,6 +1103,12 @@ $(document).ready(function() {
 			window.location = "tenant_add_special.html?id="+id[1];
 		} */
 	})
+	$('#bdatepicker').on('click', function(e) {
+		e.preventDefault();
+		$.dateSelect.show({
+			element: 'input[name="bdate"]'
+		});
+	});
 })
 
 //jquery form validation

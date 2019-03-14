@@ -63,6 +63,45 @@ function get_moneydot(money) {
 	
 }
 
+function reformatDate(inputDate) {
+	
+	months=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+	inputBroke=inputDate.split("/");
+	inputDay=parseInt(inputBroke[1]);
+	inputMonth=parseInt(inputBroke[0]);
+	inputYear=inputBroke[2];
+	outputDay=inputDay;
+	outputMonth=months[inputMonth-1];
+	outputYear=inputYear.split("")[2]+inputYear.split("")[3];
+	return (outputDay+"-"+outputMonth+"-"+outputYear);
+	
+}
+
+function reformatDate2(inputDate) {
+	
+	months=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+	months2=["01","02","03","04","05","06","07","08","09","10","11","12"];
+	inputBroke=inputDate.split("-");
+	inputDay=inputBroke[0];
+	inputMonth=inputBroke[1];
+	inputYear=inputBroke[2];
+	if (parseInt(inputDay) < 10) {
+		outputDay = "0"+inputDay;
+	} else {
+		outputDay = inputDay;
+	}
+	for (var i=0;i<months.length;i++) {
+		if (inputMonth == months[i]) {
+			outputMonth = months2[i];
+			break
+		}
+	}
+	outputYear = "20"+inputYear;
+	return (outputMonth+"/"+outputDay+"/"+outputYear);
+	
+}
+
+
 function addInvoice() {
 	
 	setTimeout(function(){
@@ -99,9 +138,333 @@ function addInvoice() {
 	}, 1000);
 	
 }
+var bondList = [];
+var ledgerList = [];
+var bondWaitDue = 0;
+var historyperiod = 1;
 
 function addPayment() {
-	
+	// get id , refnum
+	var refNumberHtml = $("#paymentTenantRef").val();
+	var id = $("#paymentTenantID").val();
+	//init firebase
+	paymentRef = firebase.database().ref().child("payment/"+id);
+	//collect data from payment form
+	var paymentDate = reformatDate2($("#paymentDate").val());
+	var paymentAmount = rem_moneydot($("#paymentAmount").val());
+	var paymentDetails = $("#paymentDetails").val();
+	var paymentDetailsOther = $("#paymentDetailsOther").val();
+	if (paymentDetails == "rentpay") {
+		var paymentDetailsFull = "Rental Payment";
+	} else if (paymentDetails == "finepay") {
+		var paymentDetailsFull = "Fine Payment";
+	} else if (paymentDetails == "bondpay") {
+		var paymentDetailsFull = "Bond Money Payment";
+	} else if (paymentDetails == "transfer") {
+		var paymentDetailsFull = "Bond Money Transfer";
+	} else if (paymentDetails == "refund") {
+		var paymentDetailsFull = "Bond Money Refund";
+	} else {
+		var paymentDetailsFull = "Other Payment - "+paymentDetailsOther;
+	}
+	if (paymentDetails == "bondpay") { //bond money payment
+		if (bondWaitDue-paymentAmount < 0) {
+			if (bondWaitDue != 0) {
+				var bondLeft = paymentAmount-bondWaitDue;
+				paymentRef.push({
+					"date":paymentDate,
+					"desc":"Bond Money Deposit",
+					"invoice":null,
+					"payment":bondWaitDue,
+					"refnumber":refNumberHtml,
+					"list":"bondList"
+				});
+				paymentRef.push({
+					"date":paymentDate,
+					"desc":paymentDetailsFull,
+					"invoice":null,
+					"payment":bondWaitDue,
+					"refnumber":refNumberHtml,
+					"list":"ledgerList"
+				});
+				if (bondLeft != 0) {
+					paymentRef.push({
+						"date":paymentDate,
+						"desc":"Rental Payment",
+						"invoice":null,
+						"payment":bondLeft,
+						"refnumber":refNumberHtml,
+						"list":"ledgerList"
+					});
+				}
+				bondWaitDue = 0;
+			} else {
+				paymentRef.push({
+					"date":paymentDate,
+					"desc":"Rental Payment",
+					"invoice":null,
+					"payment":paymentAmount,
+					"refnumber":refNumberHtml,
+					"list":"ledgerList"
+				});
+			}
+		} else {
+			bondWaitDue -= paymentAmount;
+			paymentRef.push({
+				"date":paymentDate,
+				"desc":"Bond Money Deposit",
+				"invoice":null,
+				"payment":paymentAmount,
+				"refnumber":refNumberHtml,
+				"list":"bondList"
+			});
+			paymentRef.push({
+				"date":paymentDate,
+				"desc":paymentDetailsFull,
+				"invoice":null,
+				"payment":paymentAmount,
+				"refnumber":refNumberHtml,
+				"list":"ledgerList"
+			});
+		}
+	} else if (paymentDetails == "transfer") { //bond money transfer
+		if (bondWaitDue > 0) {
+			if (bondWaitDue-paymentAmount < 0) {
+				if (bondWaitDue != 0) {
+					var bondLeft = paymentAmount-bondWaitDue;
+					paymentRef.push({
+						"date":paymentDate,
+						"desc":"Bond Money Deposit",
+						"invoice":null,
+						"payment":bondWaitDue,
+						"refnumber":refNumberHtml,
+						"list":"bondList"
+					});
+					paymentRef.push({
+						"date":paymentDate,
+						"desc":"Bond Money Payment",
+						"invoice":null,
+						"payment":bondWaitDue,
+						"refnumber":refNumberHtml,
+						"list":"ledgerList"
+					});
+					if (bondLeft != 0) {
+						paymentRef.push({
+							"date":paymentDate,
+							"desc":"Rental Payment",
+							"invoice":null,
+							"payment":bondLeft,
+							"refnumber":refNumberHtml,
+							"list":"ledgerList"
+						});
+					}
+					bondWaitDue = 0;
+				} else {
+					paymentRef.push({
+						"date":paymentDate,
+						"desc":"Rental Payment",
+						"invoice":null,
+						"payment":paymentAmount,
+						"refnumber":refNumberHtml,
+						"list":"ledgerList"
+					});
+				}
+			} else {
+				bondWaitDue -= paymentAmount;
+				paymentRef.push({
+					"date":paymentDate,
+					"desc":"Bond Money Deposit",
+					"invoice":null,
+					"payment":paymentAmount,
+					"refnumber":refNumberHtml,
+					"list":"bondList"
+				});
+				paymentRef.push({
+					"date":paymentDate,
+					"desc":"Bond Money Payment",
+					"invoice":null,
+					"payment":paymentAmount,
+					"refnumber":refNumberHtml,
+					"list":"ledgerList"
+				});
+			}
+		} else {
+			paymentRef.push({
+				"date":paymentDate,
+				"desc":paymentDetailsFull,
+				"invoice":paymentAmount,
+				"payment":null,
+				"refnumber":refNumberHtml,
+				"list":"bondList"
+			});
+			paymentRef.push({
+				"date":paymentDate,
+				"desc":paymentDetailsFull,
+				"invoice":null,
+				"payment":paymentAmount,
+				"refnumber":refNumberHtml,
+				"list":"ledgerList"
+			});
+		}
+	} else if (paymentDetails == "refund") { //bond money refund
+		if (bondWaitDue > 0) {
+			if (bondWaitDue-paymentAmount < 0) {
+				if (bondWaitDue != 0) {
+					var bondLeft = paymentAmount-bondWaitDue;
+					paymentRef.push({
+						"date":paymentDate,
+						"desc":"Bond Money Deposit",
+						"invoice":null,
+						"payment":bondWaitDue,
+						"refnumber":refNumberHtml,
+						"list":"bondList"
+					});
+					paymentRef.push({
+						"date":paymentDate,
+						"desc":"Bond Money Payment",
+						"invoice":null,
+						"payment":bondWaitDue,
+						"refnumber":refNumberHtml,
+						"list":"ledgerList"
+					});
+					if (bondLeft != 0) {
+						paymentRef.push({
+							"date":paymentDate,
+							"desc":"Rental Payment",
+							"invoice":null,
+							"payment":bondLeft,
+							"refnumber":refNumberHtml,
+							"list":"ledgerList"
+						});
+					}
+					bondWaitDue = 0;
+				} else {
+					paymentRef.push({
+						"date":paymentDate,
+						"desc":"Rental Payment",
+						"invoice":null,
+						"payment":paymentAmount,
+						"refnumber":refNumberHtml,
+						"list":"ledgerList"
+					});
+				}
+			} else {
+				bondWaitDue -= paymentAmount;
+				paymentRef.push({
+					"date":paymentDate,
+					"desc":"Bond Money Deposit",
+					"invoice":null,
+					"payment":paymentAmount,
+					"refnumber":refNumberHtml,
+					"list":"bondList"
+				});
+				paymentRef.push({
+					"date":paymentDate,
+					"desc":"Bond Money Payment",
+					"invoice":null,
+					"payment":paymentAmount,
+					"refnumber":refNumberHtml,
+					"list":"ledgerList"
+				});
+			}
+		} else {
+		paymentRef.push({
+			"date":paymentDate,
+			"desc":paymentDetailsFull,
+			"invoice":paymentAmount,
+			"payment":null,
+			"refnumber":refNumberHtml,
+			"list":"bondList"
+		});
+			paymentRef.push({
+				"date":paymentDate,
+				"desc":paymentDetailsFull,
+				"invoice":null,
+				"payment":paymentAmount,
+				"refnumber":refNumberHtml,
+				"list":"ledgerList"
+			});
+			paymentRef.push({
+				"date":paymentDate,
+				"desc":"Bond Money Withdraw",
+				"invoice":paymentAmount,
+				"payment":null,
+				"refnumber":refNumberHtml,
+				"list":"ledgerList"
+			});
+		}
+	} else { //other payment
+		if (bondWaitDue > 0) {
+			if (bondWaitDue-paymentAmount < 0) {
+				if (bondWaitDue != 0) {
+					var bondLeft = paymentAmount-bondWaitDue;
+					paymentRef.push({
+						"date":paymentDate,
+						"desc":"Bond Money Deposit",
+						"invoice":null,
+						"payment":bondWaitDue,
+						"refnumber":refNumberHtml,
+						"list":"bondList"
+					});
+					paymentRef.push({
+						"date":paymentDate,
+						"desc":"Bond Money Payment",
+						"invoice":null,
+						"payment":bondWaitDue,
+						"refnumber":refNumberHtml,
+						"list":"ledgerList"
+					});
+					if (bondLeft != 0) {
+						paymentRef.push({
+							"date":paymentDate,
+							"desc":"Rental Payment",
+							"invoice":null,
+							"payment":bondLeft,
+							"refnumber":refNumberHtml,
+							"list":"ledgerList"
+						});
+					}
+					bondWaitDue = 0;
+				} else {
+					paymentRef.push({
+						"date":paymentDate,
+						"desc":"Rental Payment",
+						"invoice":null,
+						"payment":paymentAmount,
+						"refnumber":refNumberHtml,
+						"list":"ledgerList"
+					});
+				}
+			} else {
+				bondWaitDue -= paymentAmount;
+				paymentRef.push({
+					"date":paymentDate,
+					"desc":"Bond Money Deposit",
+					"invoice":null,
+					"payment":paymentAmount,
+					"refnumber":refNumberHtml,
+					"list":"bondList"
+				});
+				paymentRef.push({
+					"date":paymentDate,
+					"desc":"Bond Money Payment",
+					"invoice":null,
+					"payment":paymentAmount,
+					"refnumber":refNumberHtml,
+					"list":"ledgerList"
+				});
+			}
+		} else {
+			paymentRef.push({
+				"date":paymentDate,
+				"desc":paymentDetailsFull,
+				"invoice":null,
+				"payment":paymentAmount,
+				"refnumber":refNumberHtml,
+				"list":"ledgerList"
+			});
+		}
+	}
 	setTimeout(function(){
 		//stop loading icon
 		$("#cover-spin").fadeOut(250, function() {
@@ -137,7 +500,9 @@ function addPayment() {
 			class_name: 'gritter-custom'
 		})
 	}, 1000);
-	
+	setTimeout(function(){
+		window.location='tenant_details.html?id='+id;
+	}, 1000);
 }
 
 //approve booking in table
@@ -459,7 +824,7 @@ $(document).ready(function() {
 	table4.row.add(["<a href='javaScript:void(0)'>Bea Curran</a>","101 010 100","Photo KK"]).node().id = 'incmplete2';
 	table4.draw();
 	
-	//array for autocomplete tenant
+	//array for search bar autocomplete
 	var tenantNames = [
 		{
 			label: "Bea Curran (101 010 100)",
@@ -517,6 +882,213 @@ $(document).ready(function() {
 			refnumber: "102020100"
 		}
 	];
+	
+	// mengambil data yang approved atau occupy dari firebase ke dalam list
+	var trRef = firebase.database().ref().child("tenant-room");
+	trRef.on('child_added', function(snapshot) {
+		var tenantID = snapshot.key;
+		trRef1=trRef.child(snapshot.key);
+		trRef1.once('child_added', function(snapshot) {
+			//get starting date , building address , status occupy , ref id
+			var statingDate=snapshot.child("start_date").val();
+			var propAddr=snapshot.child("prop_addr").val();
+			var statOccupy=snapshot.child("stat_occupy").val();
+			var refN = snapshot.child("ref_number").val();
+			var refN1= refN.split(" ");
+			var refNumber=refN1[0]+refN1[1]+refN1[2];
+			// mengambil data tenant yang status nya approved atau active
+			if ((statOccupy=="approved") ||(statOccupy=="active")){
+				var tenantRef = firebase.database().ref().child("tenant/"+tenantID);
+				tenantRef.once('value', function(snapshot) {
+					var full_name=snapshot.child("full_name").val();
+					newObj = {
+						"label":full_name +' ('+refN+')',
+						"tenantid":tenantID,
+						"refnumber":refNumber
+					}
+					tenantNames.push(newObj);
+					//start invoice tenant autocomplete
+					$("#invoiceTenantName").autocomplete({
+						source: function(request, response) {
+							var results = $.ui.autocomplete.filter(tenantNames, request.term);
+							response(results.slice(0, 10));
+						},
+						select: function(event, ui) {
+							$("#invoiceTenantName").val(ui.item.label.split("(")[0].slice(0,-1));
+							$("#invoiceTenantID").val(ui.item.tenantid);
+							$("#invoiceTenantRef").val(ui.item.refnumber);
+							return false;
+						}
+					});
+					//start payment tenant autocomplete
+					$("#paymentTenantName").autocomplete({
+						source: function(request, response) {
+							var results = $.ui.autocomplete.filter(tenantNames, request.term);
+							response(results.slice(0, 10));
+						},
+						select: function(event, ui) {
+							$("#paymentTenantName").val(ui.item.label.split("(")[0].slice(0,-1));
+							$("#paymentTenantID").val(ui.item.tenantid);
+							$("#paymentTenantRef").val(ui.item.refnumber);
+							return false;
+						}
+					});
+				});
+			}
+		});
+	});
+	trRef.on('child_changed', function(snapshot) {
+		var tenantID = snapshot.key;
+		trRef1=trRef.child(snapshot.key);
+		trRef1.on('value', function(snapshot) {
+			//get starting date , building address , status occupy , ref id
+			var statingDate=snapshot.child("start_date").val();
+			var propAddr=snapshot.child("prop_addr").val();
+			var statOccupy=snapshot.child("stat_occupy").val();
+			var refN = snapshot.child("ref_number").val();
+			var refN1= refN.split(" ");
+			var refNumber=refN1[0]+refN[1]+refN[2];
+			// mengambil data tenant yang status nya approved atau active
+			if ((statOccupy=="approved") ||(statOccupy=="active")){
+				var tenantRef = firebase.database().ref().child("tenant/"+tenantID);
+				tenantRef.once('value', function(snapshot) {
+					var full_name=snapshot.child("full_name").val();
+					var i=0;
+					// pengechekan apakah data yang berubah sudah ada di list
+					for (;i<tenantNames.length;i++){
+						if(tenantNames[i].refnumber==refNumber){
+							newObj = {
+								"label":full_name +' ('+refN+')',
+								"tenantid":tenantID,
+								"refnumber":refNumber
+							}
+							tenantNames[i]=newObj;
+							break
+						}
+					}
+					// jika memang data yang berubah belum ada didalam list
+					if (i==tenantNames.length){
+						newObj = {
+							"label":full_name +' ('+refN+')',
+							"tenantid":tenantID,
+							"refnumber":refNumber
+						}
+						tenantNames.push(newObj);
+						
+					}
+					//start invoice tenant autocomplete
+					$("#invoiceTenantName").autocomplete({
+						source: function(request, response) {
+							var results = $.ui.autocomplete.filter(tenantNames, request.term);
+							response(results.slice(0, 10));
+						},
+						select: function(event, ui) {
+							$("#invoiceTenantName").val(ui.item.label.split("(")[0].slice(0,-1));
+							$("#invoiceTenantID").val(ui.item.tenantid);
+							$("#invoiceTenantRef").val(ui.item.refnumber);
+							return false;
+						}
+					});
+					//start payment tenant autocomplete
+					$("#paymentTenantName").autocomplete({
+						source: function(request, response) {
+							var results = $.ui.autocomplete.filter(tenantNames, request.term);
+							response(results.slice(0, 10));
+						},
+						select: function(event, ui) {
+							$("#paymentTenantName").val(ui.item.label.split("(")[0].slice(0,-1));
+							$("#paymentTenantID").val(ui.item.tenantid);
+							$("#paymentTenantRef").val(ui.item.refnumber);
+							return false;
+						}
+					});
+				});
+			} else {
+				// jika status sudah bukan approved atau active
+				for (i=0;i<tenantNames.length;i++){
+					if(tenantNames[i].refnumber==refNumber){
+						tenantNames.splice(i,1);
+						//start invoice tenant autocomplete
+						$("#invoiceTenantName").autocomplete({
+							source: function(request, response) {
+								var results = $.ui.autocomplete.filter(tenantNames, request.term);
+								response(results.slice(0, 10));
+							},
+							select: function(event, ui) {
+								$("#invoiceTenantName").val(ui.item.label.split("(")[0].slice(0,-1));
+								$("#invoiceTenantID").val(ui.item.tenantid);
+								$("#invoiceTenantRef").val(ui.item.refnumber);
+								return false;
+							}
+						});
+						//start payment tenant autocomplete
+						$("#paymentTenantName").autocomplete({
+							source: function(request, response) {
+								var results = $.ui.autocomplete.filter(tenantNames, request.term);
+								response(results.slice(0, 10));
+							},
+							select: function(event, ui) {
+								$("#paymentTenantName").val(ui.item.label.split("(")[0].slice(0,-1));
+								$("#paymentTenantID").val(ui.item.tenantid);
+								$("#paymentTenantRef").val(ui.item.refnumber);
+								return false;
+							}
+						});
+						break
+					}
+				}
+			}
+		});
+	});
+	
+	trRef.on('child_removed', function(snapshot) {
+		var tenantID = snapshot.key;
+		trRef1=trRef.child(snapshot.key);
+		trRef1.once('value', function(snapshot) {
+			//get starting date , building address , status occupy , ref id
+			var statingDate=snapshot.child("start_date").val();
+			var propAddr=snapshot.child("prop_addr").val();
+			var statOccupy=snapshot.child("stat_occupy").val();
+			var refN = snapshot.child("ref_number").val();
+			var refN1= refN.split(" ");
+			var refNumber=refN1[0]+refN[1]+refN[2];
+			
+			// jika status sudah bukan approved atau active
+			for (i=0;i<tenantNames.length;i++){
+				if(tenantNames[i].refnumber==refNumber){
+					tenantNames.splice(i,1);
+					//start invoice tenant autocomplete
+					$("#invoiceTenantName").autocomplete({
+						source: function(request, response) {
+							var results = $.ui.autocomplete.filter(tenantNames, request.term);
+							response(results.slice(0, 10));
+						},
+						select: function(event, ui) {
+							$("#invoiceTenantName").val(ui.item.label.split("(")[0].slice(0,-1));
+							$("#invoiceTenantID").val(ui.item.tenantid);
+							$("#invoiceTenantRef").val(ui.item.refnumber);
+							return false;
+						}
+					});
+					//start payment tenant autocomplete
+					$("#paymentTenantName").autocomplete({
+						source: function(request, response) {
+							var results = $.ui.autocomplete.filter(tenantNames, request.term);
+							response(results.slice(0, 10));
+						},
+						select: function(event, ui) {
+							$("#paymentTenantName").val(ui.item.label.split("(")[0].slice(0,-1));
+							$("#paymentTenantID").val(ui.item.tenantid);
+							$("#paymentTenantRef").val(ui.item.refnumber);
+							return false;
+						}
+					});
+					break
+				}
+			}
+		});
+	});
+	
 	//sort array ascending based on name
 	tenantNames.sort(function(a, b){
 		var nameA=a.label.toLowerCase(), nameB=b.label.toLowerCase();
@@ -526,6 +1098,7 @@ $(document).ready(function() {
 			return 1;
 		return 0; //default return value (no sorting)
 	});
+	
 	//start invoice tenant autocomplete
 	$("#invoiceTenantName").autocomplete({
 		source: function(request, response) {
@@ -535,6 +1108,7 @@ $(document).ready(function() {
 		select: function(event, ui) {
 			$("#invoiceTenantName").val(ui.item.label.split("(")[0].slice(0,-1));
 			$("#invoiceTenantID").val(ui.item.tenantid);
+			$("#invoiceTenantRef").val(ui.item.refnumber);
 			return false;
 		}
 	});
@@ -547,16 +1121,19 @@ $(document).ready(function() {
 		select: function(event, ui) {
 			$("#paymentTenantName").val(ui.item.label.split("(")[0].slice(0,-1));
 			$("#paymentTenantID").val(ui.item.tenantid);
+			$("#paymentTenantRef").val(ui.item.refnumber);
 			return false;
 		}
 	});
 	//start invoice datepicker
 	$('#invoiceDatePicker').datepicker({
-		format: "dd-M-yy"
+		format: "dd-M-yy",
+		autoclose: true
 	})
 	//start payment datepicker
 	$('#paymentDatePicker').datepicker({
-		format: "dd-M-yy"
+		format: "dd-M-yy",
+		autoclose: true
 	})
 	
 	//approve modal add listener
