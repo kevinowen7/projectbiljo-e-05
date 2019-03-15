@@ -111,6 +111,16 @@ function reformatDate3(inputDate) {
 	
 }
 
+function reformatDate4(inputDate) {
+	
+	inputBroke=inputDate.split("/");
+	inputDay=parseInt(inputBroke[1]);
+	inputMonth=parseInt(inputBroke[0]);
+	inputYear=inputBroke[2];
+	return (inputDay+"/"+inputMonth+"/"+inputYear);
+	
+}
+
 function date_diff_indays(d1, d2) {
 	
 	var diff = Date.parse(d2) - Date.parse(d1);
@@ -682,12 +692,10 @@ $(document).ready(function() {
 								$("#adate").html(reformatDate(snapshot.child("availdate").val()));
 								$("#yearp").val(parseInt(snapshot.child("yearprice").val()));
 								$("#myRoomID").val(roomID);
-								var dd = new Date();
-								var dateDiff = date_diff_indays((parseInt(dd.getMonth())+1)+"/"+dd.getDate()+"/"+dd.getFullYear(),reformatDate2($("#adate").html()))+1;
 								$('#edatepicker').datepicker({
 									format: "d-M-yy",
 									autoclose: true,
-									startDate: dateDiff+'d'
+									startDate: reformatDate4(reformatDate2($("#adate").html()))
 								});
 								//stop loading icon
 								$("#cover-spin").fadeOut(250, function() {
@@ -764,12 +772,10 @@ $(document).ready(function() {
 							$("#adate").html(reformatDate(snapshot.child("availdate").val()));
 							$("#yearp").val(snapshot.child("yearprice").val());
 							$("#myRoomID").val(id[1]);
-							var dd = new Date();
-							var dateDiff = date_diff_indays((parseInt(dd.getMonth())+1)+"/"+dd.getDate()+"/"+dd.getFullYear(),reformatDate2($("#adate").html()))+1;
 							$('#edatepicker').datepicker({
 								format: "d-M-yy",
 								autoclose: true,
-								startDate: dateDiff+'d'
+								startDate: reformatDate4(reformatDate2($("#adate").html()))
 							});
 							//stop loading icon
 							$("#cover-spin").fadeOut(250, function() {
