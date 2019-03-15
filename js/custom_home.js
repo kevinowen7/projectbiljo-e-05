@@ -501,7 +501,7 @@ function addPayment() {
 		})
 	}, 1000);
 	setTimeout(function(){
-		window.location='tenant_details.html?id='+id;
+		window.location='tenant_details.html?id='+id+"#ledger";
 	}, 1000);
 }
 

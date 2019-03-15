@@ -967,7 +967,8 @@ $(document).ready(function() {
 		}
 	} */
 	//start
-	id = window.location.href.split('=')[1];
+	id2 = window.location.href.split('=')[1];
+	id = id2.split("#")[0];
 	var tenantNames = [
 		{
 			label: "Bea Curran",
@@ -1126,12 +1127,12 @@ $(document).ready(function() {
 				
 				// check data pada list tenantname
 				for (i=0;i<(tenantNames.length);++i){
-					if (tenantNames[i].tenantid==id){
+					if (tenantNames[i].tenantid == id){
 						label = tenantNames[i].label;
 						var refnumber = tenantNames[i].refnumber;
 					}
 					//redirect from accounting building
-					else if ((tenantNames[i].tenantid)+"#ledger"==(id)){
+					if ((tenantNames[i].tenantid)+"#ledger" == id2) {
 						$("#ledger").addClass("in active")
 						$("#tenant").removeClass("in active")
 						$("#tabtenant").removeClass("active")
