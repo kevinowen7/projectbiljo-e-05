@@ -1035,7 +1035,16 @@ $(document).ready(function() {
 	$("#edate").on('change', function () {
 		if ($(this).val() != "") {
 			if(date_diff_indays(reformatDate2($(this).val()),reformatDate2($("#adate").html())) > 0) {
-				alert("Date not allowed");
+				//error notification
+				$.gritter.add({
+					title: 'Error',
+					text: 'Date is not valid.',
+					image: './img/bell.png',
+					sticky: false,
+					time: 3500,
+					class_name: 'gritter-custom'
+				});
+				$(this).val("");
 			}
 		}
 	})
